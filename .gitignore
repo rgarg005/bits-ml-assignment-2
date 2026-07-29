@@ -1,0 +1,12 @@
+# Raw training data - fetched by the commands in README.md, not committed.
+# bank-full.csv is 4.6 MB and freely available from UCI; only the held-out
+# test_data.csv (needed by the deployed app) is tracked.
+.data/
+
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+.venv/
+venv/
+.streamlit/secrets.toml
