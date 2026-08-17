@@ -15,6 +15,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import altair as alt
 import joblib
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -153,6 +154,45 @@ def render_roc_curve(truth: pd.Series, scores, display_name: str, auc: float) ->
     plt.close(figure)
 
 
+def ranked_bar_chart(
+    values: pd.Series, value_label: str, category_label: str, highlight_best: bool = False
+):
+    """Horizontal bars that keep the order of `values` as given.
+
+    st.bar_chart re-sorts its categorical axis alphabetically and ignores the
+    order of the Series it is handed, which turns a ranking into an alphabetical
+    list. Encoding the order explicitly through Altair's `sort` is the only
+    reliable way to make the chart show what the numbers actually say.
+    """
+    frame = pd.DataFrame(
+        {category_label: values.index.astype(str), value_label: values.to_numpy()}
+    )
+    category_order = frame[category_label].tolist()
+
+    bars = (
+        alt.Chart(frame)
+        .mark_bar(cornerRadiusEnd=3, height=18)
+        .encode(
+            x=alt.X(f"{value_label}:Q", title=value_label),
+            y=alt.Y(f"{category_label}:N", sort=category_order, title=None),
+            color=(
+                alt.condition(
+                    alt.datum[value_label] == float(values.max()),
+                    alt.value("#6A2C91"),
+                    alt.value("#C9B6DB"),
+                )
+                if highlight_best
+                else alt.value("#6A2C91")
+            ),
+            tooltip=[category_label, alt.Tooltip(f"{value_label}:Q", format=".4f")],
+        )
+    )
+    labels = bars.mark_text(align="left", dx=4, fontSize=11).encode(
+        text=alt.Text(f"{value_label}:Q", format=".4f"), color=alt.value("#444444")
+    )
+    return (bars + labels).properties(height=max(160, 30 * len(frame)))
+
+
 def render_feature_influence(pipeline, display_name: str) -> None:
     """Show the top drivers, using whichever interpretability hook the model has."""
     encoder = pipeline.named_steps["encode"]
@@ -178,7 +218,9 @@ def render_feature_influence(pipeline, display_name: str) -> None:
         return
 
     st.caption(caption)
-    st.bar_chart(ordered.iloc[::-1], horizontal=True, height=340)
+    st.altair_chart(
+        ranked_bar_chart(ordered, "Influence", "Feature"), width="stretch"
+    )
 
 
 # ----------------------------------------------------------------------------
@@ -335,11 +377,18 @@ with compare_tab:
     st.subheader("Ranking by metric")
     chosen_metric = st.radio(
         "Rank models by", METRIC_ORDER, index=5, horizontal=True,
-        help=METRIC_HELP["MCC"],
+        help="Pick a metric to re-rank the six models. The order changes with the "
+             "metric, which is the whole point of the table above.",
     )
     st.caption(METRIC_HELP[chosen_metric])
-    st.bar_chart(
-        comparison[chosen_metric].sort_values(), horizontal=True, height=300
+    st.altair_chart(
+        ranked_bar_chart(
+            comparison[chosen_metric].sort_values(ascending=False),
+            chosen_metric,
+            "Model",
+            highlight_best=True,
+        ),
+        width="stretch",
     )
 
     leader = comparison[chosen_metric].idxmax()

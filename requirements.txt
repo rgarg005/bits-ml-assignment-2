@@ -2,10 +2,16 @@
 # scikit-learn in particular MUST match the training version: unpickling a
 # Pipeline saved by a different minor release emits InconsistentVersionWarning
 # and can fail outright, which is the most common Streamlit Cloud deploy break.
+#
+# pandas is 2.3.3 rather than 2.3.2 deliberately: Streamlit Community Cloud
+# builds on Python 3.14, and 2.3.2 publishes no cp314 wheel, so it falls back to
+# a source build and the container never finishes installing. 2.3.3 is the first
+# release with a cp314 wheel, and it reproduces all six models' metrics exactly.
 streamlit==1.57.0
 scikit-learn==1.7.2
-pandas==2.3.2
+pandas==2.3.3
 numpy==2.3.3
 joblib==1.5.2
 matplotlib==3.10.6
 seaborn==0.13.2
+altair==6.1.0
