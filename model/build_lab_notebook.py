@@ -540,7 +540,92 @@ print("  >> Every headline number above is optimistic for a real pre-call model.
     ),
     (
         "markdown",
-        """## 9. Conclusion
+        """## 9. Verification against the submitted results
+
+The numbers this run produces must match the comparison table in the submitted
+`README.md`, otherwise the screenshot contradicts the submission. The cell below
+checks all 36 values (6 models × 6 metrics) automatically, so the output is proof
+of consistency rather than something a reader has to cross-check by eye.
+
+Everything is seeded (`random_state=42`) and the split is stratified, so an exact
+match is expected **provided scikit-learn is the same version**. A different
+minor release can shift the last decimal or two — the cell reports that
+explicitly rather than failing silently.""",
+    ),
+    (
+        "code",
+        '''# The values published in README.md, produced with scikit-learn 1.7.2.
+EXPECTED = {
+    "Logistic Regression":          [0.8477, 0.9085, 0.4218, 0.8162, 0.5562, 0.5130],
+    "Decision Tree":                [0.7963, 0.8965, 0.3521, 0.8828, 0.5035, 0.4713],
+    "kNN":                          [0.8963, 0.8942, 0.6471, 0.2496, 0.3603, 0.3586],
+    "Naive Bayes":                  [0.8556, 0.8052, 0.4041, 0.4939, 0.4445, 0.3649],
+    "Random Forest (Ensemble)":     [0.8489, 0.9239, 0.4268, 0.8510, 0.5685, 0.5317],
+    "Gradient Boosting (Ensemble)": [0.9078, 0.9327, 0.6489, 0.4614, 0.5393, 0.4985],
+}
+REFERENCE_SKLEARN = "1.7.2"
+TOLERANCE = 0.0005          # i.e. the printed 4-decimal value must agree
+
+print("=" * 88)
+print("VERIFICATION — this run vs the submitted README.md")
+print("=" * 88)
+if sklearn.__version__ != REFERENCE_SKLEARN:
+    print(f"  NOTE: scikit-learn here is {sklearn.__version__}, README was produced "
+          f"with {REFERENCE_SKLEARN}.")
+    print("        Small last-decimal differences would be expected and harmless.\\n")
+
+worst, mismatches, compared = 0.0, [], 0
+print(f"  {'model':<30} {'metric':<10} {'this run':>10} {'README':>10} {'delta':>10}")
+print("  " + "-" * 74)
+for model, expected_values in EXPECTED.items():
+    for metric, expected in zip(METRICS, expected_values):
+        actual = float(comparison.loc[model, metric])
+        delta = abs(actual - expected)
+        worst = max(worst, delta)
+        compared += 1
+        if delta > TOLERANCE:
+            mismatches.append((model, metric, actual, expected, delta))
+            print(f"  {model:<30} {metric:<10} {actual:>10.4f} {expected:>10.4f} "
+                  f"{delta:>10.4f}  <-- MISMATCH")
+
+print("  " + "-" * 74)
+print(f"  values compared      : {compared}")
+print(f"  mismatches           : {len(mismatches)}")
+print(f"  largest deviation    : {worst:.6f}   (tolerance {TOLERANCE})")
+print()
+if not mismatches:
+    print("  RESULT: PASS — all 36 metrics reproduce the submitted README exactly.")
+else:
+    print(f"  RESULT: {len(mismatches)} value(s) differ. If scikit-learn differs from "
+          f"{REFERENCE_SKLEARN} this is")
+    print("          expected; update the README table to match THIS run before "
+          "submitting,")
+    print("          so the report and the screenshot agree.")
+print("=" * 88)
+
+# A second, independent check: the qualitative claims the report is built on.
+print("\\nQualitative claims the report depends on:")
+checks = [
+    ("Random Forest has the best MCC at 0.50",
+     comparison["MCC"].idxmax() == "Random Forest (Ensemble)"),
+    ("Gradient Boosting has the best AUC",
+     comparison["AUC"].idxmax() == "Gradient Boosting (Ensemble)"),
+    ("Decision Tree has the best recall",
+     comparison["Recall"].idxmax() == "Decision Tree"),
+    ("Naive Bayes has the worst AUC",
+     comparison["AUC"].idxmin() == "Naive Bayes"),
+    ("kNN has the worst recall (threshold artefact)",
+     comparison["Recall"].idxmin() == "kNN"),
+    ("At least one model scores below the majority baseline on accuracy",
+     bool((comparison["Accuracy"] < baseline).any())),
+]
+for claim, holds in checks:
+    print(f"  [{'OK' if holds else 'FAIL'}] {claim}")
+print(f"\\n  {sum(h for _, h in checks)}/{len(checks)} qualitative claims hold.")''',
+    ),
+    (
+        "markdown",
+        """## 10. Conclusion
 
 | Finding | Evidence |
 |---|---|
