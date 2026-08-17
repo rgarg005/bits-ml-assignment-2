@@ -55,10 +55,36 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sklearn
 
-# Works whether the notebook is launched from the repo root or from model/.
+# This notebook imports three helper modules that live beside it in the repo
+# (preprocessing.py, evaluation.py, train_models.py). On a shared machine such as
+# BITS Virtual Lab the notebook is often uploaded on its own into a home
+# directory, so rather than assume the repo layout we search every plausible
+# location for them and fail with an actionable message if they are absent.
+HELPER_MODULES = ["preprocessing.py", "evaluation.py", "train_models.py"]
 NOTEBOOK_DIR = Path.cwd()
-MODEL_DIR = NOTEBOOK_DIR if NOTEBOOK_DIR.name == "model" else NOTEBOOK_DIR / "model"
-REPO_ROOT = MODEL_DIR.parent
+
+CANDIDATES = [
+    NOTEBOOK_DIR,                    # notebook + helpers uploaded flat
+    NOTEBOOK_DIR / "model",          # launched from the repo root
+    NOTEBOOK_DIR.parent,             # launched from a subdirectory
+    NOTEBOOK_DIR.parent / "model",
+]
+
+MODEL_DIR = next(
+    (d for d in CANDIDATES if all((d / m).exists() for m in HELPER_MODULES)), None
+)
+if MODEL_DIR is None:
+    searched = "\\n  ".join(str(d) for d in CANDIDATES)
+    raise FileNotFoundError(
+        "Could not find the helper modules " + ", ".join(HELPER_MODULES) + ".\\n"
+        "Searched:\\n  " + searched + "\\n\\n"
+        "Upload those three files into the same folder as this notebook "
+        "(they are in model/ in the GitHub repository), then re-run this cell."
+    )
+
+# In the repo the helpers sit in model/; uploaded flat, the notebook's own folder
+# doubles as the project root.
+REPO_ROOT = MODEL_DIR.parent if MODEL_DIR.name == "model" else MODEL_DIR
 sys.path.insert(0, str(MODEL_DIR))
 
 pd.set_option("display.width", 120)
@@ -69,7 +95,8 @@ print("python      ", sys.version.split()[0])
 print("numpy       ", np.__version__)
 print("pandas      ", pd.__version__)
 print("scikit-learn", sklearn.__version__)
-print("repo root   ", REPO_ROOT)""",
+print("helpers from", MODEL_DIR)
+print("project root", REPO_ROOT)""",
     ),
     (
         "markdown",
@@ -82,19 +109,42 @@ The cell downloads the archive if it is not already present.""",
     (
         "code",
         """DATA_DIR = REPO_ROOT / ".data"
-DATA_PATH = DATA_DIR / "bank-full.csv"
+URL = "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip"
 
-if not DATA_PATH.exists():
+# Prefer a copy that is already on the machine. BITS Virtual Lab may have no
+# outbound internet access, in which case bank-full.csv can simply be uploaded
+# next to this notebook and will be picked up here.
+SEARCH_PATHS = list(dict.fromkeys([
+    DATA_DIR / "bank-full.csv",
+    Path.cwd() / "bank-full.csv",
+    REPO_ROOT / "bank-full.csv",
+    MODEL_DIR / "bank-full.csv",
+    Path.home() / "bank-full.csv",
+]))
+DATA_PATH = next((p for p in SEARCH_PATHS if p.exists()), None)
+
+if DATA_PATH is None:
     import urllib.request, zipfile, io
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    URL = "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip"
-    print(f"downloading {URL} ...")
-    with urllib.request.urlopen(URL) as response:
-        outer = zipfile.ZipFile(io.BytesIO(response.read()))
-        inner = zipfile.ZipFile(io.BytesIO(outer.read("bank.zip")))
-        inner.extractall(DATA_DIR)
-    print("done")
+    try:
+        print(f"no local copy found; downloading {URL} ...")
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        with urllib.request.urlopen(URL, timeout=90) as response:
+            outer = zipfile.ZipFile(io.BytesIO(response.read()))
+            inner = zipfile.ZipFile(io.BytesIO(outer.read("bank.zip")))
+            inner.extractall(DATA_DIR)
+        DATA_PATH = DATA_DIR / "bank-full.csv"
+        print("done")
+    except Exception as error:
+        searched = "\\n  ".join(str(p) for p in SEARCH_PATHS)
+        raise SystemExit(
+            f"Could not obtain the dataset ({type(error).__name__}: {error}).\\n\\n"
+            "This machine may have no outbound internet access. Download "
+            f"bank-full.csv from\\n  {URL}\\n"
+            "on a machine that does, upload it next to this notebook, and re-run.\\n\\n"
+            "Searched:\\n  " + searched
+        )
 
+print(f"dataset: {DATA_PATH}")
 bank_df = pd.read_csv(DATA_PATH, sep=";")
 print(f"shape: {bank_df.shape[0]:,} rows x {bank_df.shape[1]} columns "
       f"({bank_df.shape[1] - 1} features + target)")
