@@ -348,6 +348,15 @@ with compare_tab:
         f"({comparison.loc[leader, chosen_metric]:.4f}) at threshold {threshold:.2f}."
     )
 
+    st.download_button(
+        "Download this comparison table as CSV",
+        data=comparison.round(4).to_csv().encode(),
+        file_name=f"model_comparison_threshold_{threshold:.2f}.csv",
+        mime="text/csv",
+        help="Exports the six-model table exactly as computed on the current "
+             "test set and threshold.",
+    )
+
 with data_tab:
     st.subheader("Test data preview")
     st.dataframe(test_frame.head(50), width="stretch")

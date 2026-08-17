@@ -194,6 +194,29 @@ single client — yet both have far higher MCC than kNN, which *beats* the basel
 on accuracy. Any conclusion drawn from the accuracy column alone would be exactly
 backwards.
 
+### Confusion-matrix breakdown
+
+Raw counts behind the table above, at threshold 0.50. Test set = 9,981 `no` +
+1,322 `yes`. **Positive class convention: `y = yes` → 1**, so *recall* is the
+share of genuine subscribers found and *FN* is a subscriber the campaign would
+never have called.
+
+| Model | TN | FP | FN | TP |
+|---|---|---|---|---|
+| Logistic Regression | 8,502 | 1,479 | 243 | 1,079 |
+| Decision Tree | 7,834 | 2,147 | **155** | **1,167** |
+| kNN | 9,801 | **180** | 992 | 330 |
+| Naive Bayes | 9,018 | 963 | 669 | 653 |
+| Random Forest (Ensemble) | 8,470 | 1,511 | 197 | 1,125 |
+| Gradient Boosting (Ensemble) | 9,651 | 330 | 712 | 610 |
+
+The FN column is the commercially decisive one, and it spans **155 to 992** — a
+6.4× range. kNN and Gradient Boosting look precise because they barely predict
+`yes` at all: kNN raises only 510 positive flags in total and misses 992 of 1,322
+subscribers. The Decision Tree's "worst accuracy in the table" buys the **lowest
+false-negative count of any model**, which on a campaign where a missed customer
+costs more than a wasted call is the trade you would actually want.
+
 ### Threshold sensitivity
 
 The 0.50 cut-off is a convention, not a property of the data. Sweeping it from
