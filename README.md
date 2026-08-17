@@ -7,7 +7,7 @@ interactive Streamlit dashboard that evaluates any uploaded test CSV live.
 
 | | |
 |---|---|
-| **Live app** | `<PASTE YOUR STREAMLIT CLOUD URL HERE — deploy first>` |
+| **Live app** | <https://bits-ml-assignment-2-dxnqhzykh5yl6dd9bhk4ev.streamlit.app> |
 | **GitHub repo** | <https://github.com/rgarg005/bits-ml-assignment-2> |
 
 ---
@@ -252,7 +252,7 @@ exposes a threshold slider rather than hard-coding 0.50.
 
 ## e. Streamlit app features
 
-Live app: `<PASTE YOUR STREAMLIT CLOUD URL HERE>`
+Live app: <https://bits-ml-assignment-2-dxnqhzykh5yl6dd9bhk4ev.streamlit.app>
 
 | Required feature | Where |
 |---|---|
