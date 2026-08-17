@@ -16,3 +16,11 @@ __pycache__/
 .venv/
 venv/
 .streamlit/secrets.toml
+
+# Local tooling, not part of the assignment submission: the notebook generators
+# and the script that assembles the submission PDF. Kept on disk, out of the repo.
+/make_submission_pdf.py
+/model/build_notebook.py
+/model/build_lab_notebook.py
+/model/bits_lab_standalone.py
+/model/ML_Assignment2.ipynb

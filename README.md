@@ -128,7 +128,7 @@ bits-ml-assignment-2/
     ├── preprocessing.py    Feature engineering + encoder, shared by train & app
     ├── evaluation.py       The six metrics, shared by train & app
     ├── train_models.py     Trains and persists all six models
-    ├── ML_Assignment2.ipynb  Notebook version (run on BITS Virtual Lab)
+    ├── BITS_Lab_ML_Assignment2.ipynb   Self-contained notebook, run on BITS Virtual Lab
     ├── metrics.json        Comparison-table numbers emitted by the training run
     └── *.joblib            Six fitted sklearn Pipelines
 ```
