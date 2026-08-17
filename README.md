@@ -7,8 +7,8 @@ interactive Streamlit dashboard that evaluates any uploaded test CSV live.
 
 | | |
 |---|---|
-| **Live app** | `<PASTE YOUR STREAMLIT CLOUD URL HERE>` |
-| **GitHub repo** | `<PASTE YOUR GITHUB REPO URL HERE>` |
+| **Live app** | `<PASTE YOUR STREAMLIT CLOUD URL HERE — deploy first>` |
+| **GitHub repo** | <https://github.com/rgarg005/bits-ml-assignment-2> |
 
 ---
 
@@ -116,7 +116,7 @@ would drop `duration` and accept AUC ≈ 0.80.
 
 ## c. GitHub repository link
 
-`<PASTE YOUR GITHUB REPO URL HERE>`
+<https://github.com/rgarg005/bits-ml-assignment-2>
 
 ```
 bits-ml-assignment-2/
